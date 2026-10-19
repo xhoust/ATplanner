@@ -83,8 +83,8 @@
         </div>
       </div>
 
-      <div id="grocery-departments" class="space-y-4">
-        <!-- Departments rendered via JS -->
+      <div id="grocery-departments" class="space-y-2">
+        <!-- Grocery items rendered via JS -->
       </div>
     </section>
 
@@ -112,7 +112,7 @@
       </div>
 
       <div id="events-list" class="space-y-2">
-        <!-- Rendered via JS -->
+        <!-- Events rendered via JS -->
       </div>
     </section>
   </main>
@@ -151,13 +151,13 @@
 
     const DEFAULT_DATA = {
       days: {
-        Monday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Tuesday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Wednesday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Thursday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Friday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Saturday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
-        Sunday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' }
+        Monday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Tuesday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Wednesday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Thursday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Friday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Saturday: { breakfast: '', dinner: '', lunchOverride: '' },
+        Sunday: { breakfast: '', dinner: '', lunchOverride: '' }
       },
       groceries: [],
       events: []
@@ -242,25 +242,6 @@
       pushState();
     }
 
-    function parseIngredientsToGrocery(day) {
-      const dayData = state.days[day];
-      if (!dayData || !dayData.ingredients.trim()) return;
-
-      const items = dayData.ingredients.split(',').map(s => s.trim()).filter(Boolean);
-      items.forEach(item => {
-        state.groceries.push({
-          id: Date.now() + Math.random().toString(),
-          name: item,
-          source: `${day} Dinner`,
-          checked: false,
-          category: 'Pantry'
-        });
-      });
-      dayData.ingredients = '';
-      pushState();
-      switchTab('groceries');
-    }
-
     function addCustomGroceryItem() {
       const input = document.getElementById('new-item-input');
       const text = input.value.trim();
@@ -270,8 +251,7 @@
         id: Date.now().toString(),
         name: text,
         source: `Added by ${currentUser}`,
-        checked: false,
-        category: 'Pantry'
+        checked: false
       });
       input.value = '';
       pushState();
@@ -313,7 +293,7 @@
     function confirmResetWeek() {
       if (confirm("Reset current week's meals and events?")) {
         DAYS.forEach(d => {
-          state.days[d] = { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' };
+          state.days[d] = { breakfast: '', dinner: '', lunchOverride: '' };
         });
         state.events = [];
         pushState();
@@ -327,7 +307,7 @@
 
       DAYS.forEach((day, index) => {
         const prevDay = index === 0 ? DAYS[6] : DAYS[index - 1];
-        const dayData = state.days[day] || { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' };
+        const dayData = state.days[day] || { breakfast: '', dinner: '', lunchOverride: '' };
         const prevDayDinner = (state.days[prevDay] && state.days[prevDay].dinner) ? state.days[prevDay].dinner : '';
         const lunchDisplay = dayData.lunchOverride || (prevDayDinner ? `Leftovers: ${prevDayDinner}` : 'No leftovers planned');
 
@@ -377,19 +357,6 @@
                      placeholder="e.g. Pasta bolognese, baked salmon..."
                      onchange="updateMeal('${day}', 'dinner', this.value)"
                      class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 placeholder:text-slate-600"/>
-            </div>
-
-            <div class="pt-1">
-              <div class="flex gap-1.5">
-                <input type="text" value="${dayData.ingredients || ''}" 
-                       placeholder="Dinner ingredients (e.g. garlic, pasta, cream)"
-                       onchange="updateMeal('${day}', 'ingredients', this.value)"
-                       class="flex-1 bg-slate-950 border border-slate-800/80 rounded-xl px-2.5 py-1 text-[11px] text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"/>
-                <button onclick="parseIngredientsToGrocery('${day}')" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[11px] font-medium transition flex items-center space-x-1" title="Send ingredients to Grocery List">
-                  <i class="fa-solid fa-cart-plus text-[10px]"></i>
-                  <span>Cart</span>
-                </button>
-              </div>
             </div>
           </div>
         `;
