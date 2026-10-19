@@ -31,7 +31,7 @@
 </head>
 <body class="cat-paw-bg min-h-screen pb-28 selection:bg-orange-200">
 
-  <!-- Floating Ambient Silhouette Cats (Decorative) -->
+  <!-- Decorative Silhouettes -->
   <div class="fixed top-12 -right-8 opacity-10 pointer-events-none select-none text-orange-950 text-8xl -rotate-12 z-0">
     <i class="fa-solid fa-cat"></i>
   </div>
@@ -63,7 +63,7 @@
           <span class="text-sm">🐱</span>
           <span id="active-user-label" class="tracking-wide">Tibor</span>
         </button>
-        <button onclick="confirmResetWeek()" class="w-9 h-9 rounded-2xl bg-white hover:bg-rose-50 text-neutral-400 hover:text-rose-500 border border-orange-200/70 shadow-sm flex items-center justify-center transition active:scale-90" title="Reset Week">
+        <button onclick="confirmResetWeek()" class="w-9 h-9 rounded-2xl bg-white hover:bg-rose-50 text-neutral-400 hover:text-rose-500 border border-orange-200/70 shadow-sm flex items-center justify-center transition active:scale-90" title="Reset Week Meals (Preserves Events)">
           <i class="fa-solid fa-rotate-right text-xs"></i>
         </button>
       </div>
@@ -73,7 +73,7 @@
   <!-- Main Container -->
   <main class="max-w-md mx-auto px-4 pt-4 relative z-10">
 
-    <!-- View 1: Meals Calendar + Month View -->
+    <!-- View 1: Meals Calendar -->
     <section id="view-planner" class="space-y-4">
       <div class="flex items-center justify-between px-1">
         <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-500">Weekly Meal Board</h2>
@@ -84,35 +84,6 @@
 
       <div id="days-container" class="space-y-4">
         <!-- Rendered via JS -->
-      </div>
-
-      <!-- Month Calendar at the Bottom of Main Tab -->
-      <div class="bg-white border border-amber-200/80 rounded-3xl p-5 shadow-sm mt-8">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-extrabold text-neutral-900 flex items-center gap-2">
-            <span>📅</span> <span id="cal-month-title">Month</span>
-          </h3>
-          <div class="flex items-center space-x-1">
-            <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
-              <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <button onclick="changeMonth(1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-neutral-400 mb-2">
-          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-        </div>
-        <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
-          <!-- Calendar Days generated via JS -->
-        </div>
-
-        <div id="calendar-day-details" class="mt-4 pt-3 border-t border-neutral-100 text-xs hidden">
-          <p class="font-bold text-neutral-800 mb-1" id="cal-selected-date-label">Selected Date</p>
-          <div id="cal-selected-events" class="space-y-1"></div>
-        </div>
       </div>
     </section>
 
@@ -142,38 +113,72 @@
       </div>
     </section>
 
-    <!-- View 3: Events & Reminders -->
-    <section id="view-events" class="hidden space-y-4">
+    <!-- View 3: Events & Full Monthly Calendar -->
+    <section id="view-events" class="hidden space-y-5">
+      
+      <!-- Month Calendar View -->
+      <div class="bg-white border border-amber-200/80 rounded-3xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-extrabold text-neutral-900 flex items-center gap-2">
+            <span>📅</span> <span id="cal-month-title">Month</span>
+          </h3>
+          <div class="flex items-center space-x-1">
+            <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button onclick="changeMonth(1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-neutral-400 mb-2">
+          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+          <!-- Calendar Days generated via JS -->
+        </div>
+
+        <div id="calendar-day-details" class="mt-4 pt-3 border-t border-neutral-100 text-xs hidden">
+          <p class="font-bold text-neutral-800 mb-1.5" id="cal-selected-date-label">Selected Date</p>
+          <div id="cal-selected-events" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- Add Event Card -->
       <div class="bg-white border border-amber-200/80 rounded-3xl p-5 shadow-sm">
         <h2 class="text-base font-bold text-neutral-900 mb-3 flex items-center gap-2">
           <span>📌</span> Add an Event or Date
         </h2>
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-2">
-            <select id="event-day-select" class="bg-neutral-50 border border-neutral-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50">
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
-            </select>
-            <input id="event-time-input" type="time" 
-                   class="bg-neutral-50 border border-neutral-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50"/>
+            <div>
+              <label class="block text-[11px] font-bold text-neutral-400 mb-1">Date</label>
+              <input id="event-date-input" type="date" 
+                     class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50"/>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-neutral-400 mb-1">Time (Optional)</label>
+              <input id="event-time-input" type="time" 
+                     class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50"/>
+            </div>
           </div>
 
-          <input id="event-title-input" type="text" placeholder="e.g. Dinner reservation, Gym session..." 
+          <input id="event-title-input" type="text" placeholder="e.g. Slovak PRO Reception, Gym, Dinner..." 
                  class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white" 
                  onkeydown="if(event.key === 'Enter') addEvent()"/>
           <button onclick="addEvent()" class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold py-3 rounded-2xl text-sm shadow-sm transition active:scale-98">
-            Save to Schedule
+            Save to Calendar
           </button>
         </div>
       </div>
 
-      <div id="events-list" class="space-y-2">
-        <!-- Events rendered via JS -->
+      <!-- Chronological Events Feed -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-500 px-1">Upcoming Events</h3>
+        <div id="events-list" class="space-y-2">
+          <!-- Events rendered via JS -->
+        </div>
       </div>
     </section>
 
@@ -229,6 +234,19 @@
     let currentUser = localStorage.getItem('at_hub_user') || 'Tibor';
     let currentCalDate = new Date();
 
+    // Default the date input to today
+    const formatYMD = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    setTimeout(() => {
+      const dateEl = document.getElementById('event-date-input');
+      if (dateEl) dateEl.value = formatYMD(new Date());
+    }, 100);
+
     document.getElementById('active-user-label').innerText = currentUser;
 
     function toggleUser() {
@@ -271,6 +289,8 @@
 
         if (data && data.data) {
           state = data.data;
+          // Ensure events array exists
+          if (!state.events) state.events = [];
           localStorage.setItem('at_hub_state', JSON.stringify(state));
           render();
         }
@@ -283,6 +303,7 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'planner_state' }, payload => {
           if (payload.new && payload.new.data) {
             state = payload.new.data;
+            if (!state.events) state.events = [];
             localStorage.setItem('at_hub_state', JSON.stringify(state));
             render();
           }
@@ -334,14 +355,14 @@
     }
 
     function addEvent() {
-      const day = document.getElementById('event-day-select').value;
+      const date = document.getElementById('event-date-input').value;
       const time = document.getElementById('event-time-input').value;
       const text = document.getElementById('event-title-input').value.trim();
-      if (!text) return;
+      if (!text || !date) return;
 
       state.events.push({
         id: Date.now().toString(),
-        day: day,
+        date: date,
         time: time || '',
         title: text,
         author: currentUser
@@ -356,14 +377,31 @@
       pushState();
     }
 
+    // Weekly reset ONLY resets meals & lunch overrides. Events stay untouched!
     function confirmResetWeek() {
-      if (confirm("Reset current week's meals and events?")) {
+      if (confirm("Reset this week's meals and lunch overrides? (Your calendar events will NOT be touched).")) {
         DAYS.forEach(d => {
           state.days[d] = { breakfast: '', dinner: '', lunchOverride: '' };
         });
-        state.events = [];
         pushState();
       }
+    }
+
+    // Helper: compute current week dates (Monday to Sunday)
+    function getCurrentWeekDates() {
+      const now = new Date();
+      const currentDay = now.getDay();
+      const distanceToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + distanceToMonday);
+
+      const weekMap = {};
+      DAYS.forEach((name, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        weekMap[name] = formatYMD(d);
+      });
+      return weekMap;
     }
 
     function changeMonth(delta) {
@@ -382,11 +420,9 @@
       title.innerText = `${monthNames[month]} ${year}`;
 
       const firstDayOfMonth = new Date(year, month, 1).getDay();
-      // Adjust Sunday (0) to European start on Monday (0-6)
       const startCol = (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1);
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      // Blank filler days
       for (let i = 0; i < startCol; i++) {
         const blank = document.createElement('div');
         blank.className = "py-2 text-neutral-200";
@@ -396,11 +432,8 @@
       const today = new Date();
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const cellDate = new Date(year, month, day);
-        const dayOfWeekIndex = (cellDate.getDay() === 0 ? 6 : cellDate.getDay() - 1);
-        const dayName = DAYS[dayOfWeekIndex];
-        const dayEvents = state.events.filter(e => e.day === dayName);
-
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayEvents = (state.events || []).filter(e => e.date === dStr);
         const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
 
         const cell = document.createElement('button');
@@ -415,6 +448,9 @@
           const label = document.getElementById('cal-selected-date-label');
           const evContainer = document.getElementById('cal-selected-events');
           detail.classList.remove('hidden');
+
+          const clickedDate = new Date(year, month, day);
+          const dayName = DAYS[clickedDate.getDay() === 0 ? 6 : clickedDate.getDay() - 1];
           label.innerText = `${dayName}, ${monthNames[month]} ${day}`;
           evContainer.innerHTML = '';
 
@@ -438,7 +474,9 @@
     }
 
     function render() {
-      // 1. Render Meal Days
+      const currentWeek = getCurrentWeekDates();
+
+      // 1. Render Meal Days & match this week's events
       const daysContainer = document.getElementById('days-container');
       daysContainer.innerHTML = '';
 
@@ -448,16 +486,18 @@
         const prevDayDinner = (state.days[prevDay] && state.days[prevDay].dinner) ? state.days[prevDay].dinner : '';
         const lunchDisplay = dayData.lunchOverride || (prevDayDinner ? `Leftovers: ${prevDayDinner}` : 'No leftovers planned');
 
-        const dayEvents = state.events.filter(e => e.day === day);
+        // Check if there are events for this day in the current week
+        const dayDateString = currentWeek[day];
+        const thisDayEvents = (state.events || []).filter(e => e.date === dayDateString);
 
         const card = document.createElement('div');
         card.className = "bg-white border border-amber-200/70 rounded-3xl p-5 shadow-xs transition hover:shadow-sm";
         
         let eventsHtml = '';
-        if (dayEvents.length > 0) {
+        if (thisDayEvents.length > 0) {
           eventsHtml = `
             <div class="mb-3 space-y-1">
-              ${dayEvents.map(ev => `
+              ${thisDayEvents.map(ev => `
                 <div class="flex items-center justify-between bg-sky-50 text-sky-900 border border-sky-100 px-3 py-1.5 rounded-xl text-xs font-bold">
                   <span class="flex items-center gap-1.5">
                     <span>${ev.time ? `🕒 ${ev.time}` : '📌'}</span>
@@ -475,9 +515,9 @@
             <span class="font-extrabold text-base text-neutral-900 tracking-tight flex items-center gap-1.5">
               <span>🗓️</span> ${day}
             </span>
-            ${dayEvents.length > 0 ? `
+            ${thisDayEvents.length > 0 ? `
               <span class="text-xs bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full">
-                ${dayEvents.length}
+                ${thisDayEvents.length} this week
               </span>` : ''}
           </div>
 
@@ -569,25 +609,27 @@
         });
       }
 
-      // 3. Render Events List
+      // 3. Render Events List (Sorted by date)
       const evList = document.getElementById('events-list');
       evList.innerHTML = '';
-      if (state.events.length === 0) {
+      const sortedEvents = [...(state.events || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+      if (sortedEvents.length === 0) {
         evList.innerHTML = `
-          <div class="text-center py-12 bg-white rounded-3xl border border-dashed border-amber-200/80">
+          <div class="text-center py-10 bg-white rounded-3xl border border-dashed border-amber-200/80">
             <span class="text-3xl">☕</span>
             <p class="text-sm font-bold text-neutral-600 mt-2">No plans recorded yet</p>
-            <p class="text-xs text-neutral-400">Enjoy the quiet week!</p>
+            <p class="text-xs text-neutral-400">Select a date above to add an event</p>
           </div>
         `;
       } else {
-        state.events.forEach(ev => {
+        sortedEvents.forEach(ev => {
           const row = document.createElement('div');
-          row.className = "flex items-center justify-between p-4 rounded-2xl bg-white border border-amber-200/70 shadow-xs";
+          row.className = "flex items-center justify-between p-3.5 rounded-2xl bg-white border border-amber-200/70 shadow-xs";
           row.innerHTML = `
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider bg-amber-100/70 px-2 py-0.5 rounded-lg">${ev.day}</span>
+                <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider bg-amber-100/70 px-2 py-0.5 rounded-lg">${ev.date}</span>
                 ${ev.time ? `<span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">🕒 ${ev.time}</span>` : ''}
               </div>
               <p class="text-sm font-bold text-neutral-800 mt-1.5">${ev.title}</p>
