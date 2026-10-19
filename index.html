@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>A&T Hub</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#10b981" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24 font-sans selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+    <div class="max-w-xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/30">
+          A&T
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight leading-tight">Weekly Hub</h1>
+          <div class="flex items-center space-x-1.5">
+            <span id="sync-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="sync-status" class="text-[11px] text-slate-400">Live & Synced</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button id="user-toggle" onclick="toggleUser()" class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-800 text-xs font-medium border border-slate-700 text-slate-200">
+          <i class="fa-solid fa-user text-emerald-400 text-[10px]"></i>
+          <span id="active-user-label">Tibor</span>
+        </button>
+        <button onclick="confirmResetWeek()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition text-xs" title="Reset Week">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-xl mx-auto px-4 pt-4">
+    
+    <!-- View 1: Meals & Plan -->
+    <section id="view-planner" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Weekly Meal Calendar</h2>
+        <span class="text-[11px] text-emerald-400/90 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40">
+          <i class="fa-solid fa-repeat text-[9px] mr-1"></i>Dinner rolls over to next lunch
+        </span>
+      </div>
+
+      <div id="days-container" class="space-y-3">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- View 2: Grocery List -->
+    <section id="view-groceries" class="hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h2 class="text-sm font-semibold mb-2 flex items-center justify-between">
+          <span>Add Grocery Item</span>
+          <span id="grocery-count" class="text-xs font-normal text-slate-400">0 items</span>
+        </h2>
+        <div class="flex gap-2">
+          <input id="new-item-input" type="text" placeholder="e.g. Oat milk, eggs..." 
+                 class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" 
+                 onkeydown="if(event.key === 'Enter') addCustomGroceryItem()"/>
+          <button onclick="addCustomGroceryItem()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl text-sm transition">
+            Add
+          </button>
+        </div>
+      </div>
+
+      <div id="grocery-departments" class="space-y-4">
+        <!-- Departments rendered via JS -->
+      </div>
+    </section>
+
+    <!-- View 3: Events -->
+    <section id="view-events" class="hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h2 class="text-sm font-semibold mb-3">Add Event or Reminder</h2>
+        <div class="space-y-2">
+          <select id="event-day-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+          </select>
+          <input id="event-title-input" type="text" placeholder="e.g. Dinner reservation at 7pm, gym..." 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" 
+                 onkeydown="if(event.key === 'Enter') addEvent()"/>
+          <button onclick="addEvent()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-xl text-sm transition">
+            Save Event
+          </button>
+        </div>
+      </div>
+
+      <div id="events-list" class="space-y-2">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 py-2">
+    <div class="max-w-xl mx-auto grid grid-cols-3 gap-1 px-4">
+      <button onclick="switchTab('planner')" id="tab-planner" class="flex flex-col items-center py-1 text-emerald-400">
+        <i class="fa-solid fa-calendar-week text-lg"></i>
+        <span class="text-[10px] mt-1 font-medium">Meals</span>
+      </button>
+      <button onclick="switchTab('groceries')" id="tab-groceries" class="flex flex-col items-center py-1 text-slate-400">
+        <div class="relative">
+          <i class="fa-solid fa-cart-shopping text-lg"></i>
+          <span id="grocery-badge" class="hidden absolute -top-1 -right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        </div>
+        <span class="text-[10px] mt-1 font-medium">Grocery</span>
+      </button>
+      <button onclick="switchTab('events')" id="tab-events" class="flex flex-col items-center py-1 text-slate-400">
+        <i class="fa-regular fa-clock text-lg"></i>
+        <span class="text-[10px] mt-1 font-medium">Events</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    const SUPABASE_URL = "https://xmtkbnrbhjoxsidxzeen.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_qgok2mtAMMIFaqBeZ3CVxA_y4MXPTN_";
+
+    let sbClient = null;
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    const DEFAULT_DATA = {
+      days: {
+        Monday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Tuesday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Wednesday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Thursday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Friday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Saturday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' },
+        Sunday: { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' }
+      },
+      groceries: [],
+      events: []
+    };
+
+    let state = JSON.parse(localStorage.getItem('at_hub_state')) || DEFAULT_DATA;
+    let currentUser = localStorage.getItem('at_hub_user') || 'Tibor';
+
+    document.getElementById('active-user-label').innerText = currentUser;
+
+    function toggleUser() {
+      currentUser = (currentUser === 'Tibor') ? 'Partner' : 'Tibor';
+      localStorage.setItem('at_hub_user', currentUser);
+      document.getElementById('active-user-label').innerText = currentUser;
+    }
+
+    async function pushState() {
+      localStorage.setItem('at_hub_state', JSON.stringify(state));
+      render();
+
+      if (sbClient) {
+        document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-amber-400 animate-spin";
+        document.getElementById('sync-status').innerText = "Syncing...";
+        try {
+          const { error } = await sbClient
+            .from('planner_state')
+            .upsert({ id: 'active_week', data: state, updated_at: new Date() });
+          
+          if (!error) {
+            document.getElementById('sync-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+            document.getElementById('sync-status').innerText = "Live & Synced";
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    }
+
+    async function initSupabaseSync() {
+      if (!sbClient) return;
+
+      try {
+        const { data, error } = await sbClient
+          .from('planner_state')
+          .select('data')
+          .eq('id', 'active_week')
+          .single();
+
+        if (data && data.data) {
+          state = data.data;
+          localStorage.setItem('at_hub_state', JSON.stringify(state));
+          render();
+        }
+      } catch(e) {
+        console.error("Initial fetch error:", e);
+      }
+
+      sbClient
+        .channel('public:planner_state')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'planner_state' }, payload => {
+          if (payload.new && payload.new.data) {
+            state = payload.new.data;
+            localStorage.setItem('at_hub_state', JSON.stringify(state));
+            render();
+          }
+        })
+        .subscribe();
+    }
+
+    function switchTab(tab) {
+      ['planner', 'groceries', 'events'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).className = 'flex flex-col items-center py-1 text-slate-500';
+      });
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).className = 'flex flex-col items-center py-1 text-emerald-400 font-semibold';
+    }
+
+    function updateMeal(day, field, val) {
+      if (!state.days[day]) state.days[day] = {};
+      state.days[day][field] = val;
+      pushState();
+    }
+
+    function parseIngredientsToGrocery(day) {
+      const dayData = state.days[day];
+      if (!dayData || !dayData.ingredients.trim()) return;
+
+      const items = dayData.ingredients.split(',').map(s => s.trim()).filter(Boolean);
+      items.forEach(item => {
+        state.groceries.push({
+          id: Date.now() + Math.random().toString(),
+          name: item,
+          source: `${day} Dinner`,
+          checked: false,
+          category: 'Pantry'
+        });
+      });
+      dayData.ingredients = '';
+      pushState();
+      switchTab('groceries');
+    }
+
+    function addCustomGroceryItem() {
+      const input = document.getElementById('new-item-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      state.groceries.push({
+        id: Date.now().toString(),
+        name: text,
+        source: `Added by ${currentUser}`,
+        checked: false,
+        category: 'Pantry'
+      });
+      input.value = '';
+      pushState();
+    }
+
+    function toggleGrocery(id) {
+      const item = state.groceries.find(g => g.id === id);
+      if (item) {
+        item.checked = !item.checked;
+        pushState();
+      }
+    }
+
+    function deleteGrocery(id) {
+      state.groceries = state.groceries.filter(g => g.id !== id);
+      pushState();
+    }
+
+    function addEvent() {
+      const day = document.getElementById('event-day-select').value;
+      const text = document.getElementById('event-title-input').value.trim();
+      if (!text) return;
+
+      state.events.push({
+        id: Date.now().toString(),
+        day: day,
+        title: text,
+        author: currentUser
+      });
+      document.getElementById('event-title-input').value = '';
+      pushState();
+    }
+
+    function deleteEvent(id) {
+      state.events = state.events.filter(e => e.id !== id);
+      pushState();
+    }
+
+    function confirmResetWeek() {
+      if (confirm("Reset current week's meals and events?")) {
+        DAYS.forEach(d => {
+          state.days[d] = { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' };
+        });
+        state.events = [];
+        pushState();
+      }
+    }
+
+    function render() {
+      // 1. Render Days
+      const daysContainer = document.getElementById('days-container');
+      daysContainer.innerHTML = '';
+
+      DAYS.forEach((day, index) => {
+        const prevDay = index === 0 ? DAYS[6] : DAYS[index - 1];
+        const dayData = state.days[day] || { breakfast: '', dinner: '', ingredients: '', lunchOverride: '' };
+        const prevDayDinner = (state.days[prevDay] && state.days[prevDay].dinner) ? state.days[prevDay].dinner : '';
+        const lunchDisplay = dayData.lunchOverride || (prevDayDinner ? `Leftovers: ${prevDayDinner}` : 'No leftovers planned');
+
+        const dayEvents = state.events.filter(e => e.day === day);
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm";
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+            <span class="font-bold text-sm tracking-wide text-white">${day}</span>
+            ${dayEvents.length > 0 ? `
+              <span class="text-[10px] bg-sky-950 text-sky-400 border border-sky-800/40 px-2 py-0.5 rounded-full font-medium">
+                ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}
+              </span>` : ''}
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 flex items-center">
+                <i class="fa-solid fa-mug-saucer text-amber-400 mr-1.5 text-xs"></i> Breakfast
+              </label>
+              <input type="text" value="${dayData.breakfast || ''}" 
+                     placeholder="e.g. Eggs & toast, smoothie..."
+                     onchange="updateMeal('${day}', 'breakfast', this.value)"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 placeholder:text-slate-600"/>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-between">
+                <span class="flex items-center">
+                  <i class="fa-solid fa-box text-emerald-400 mr-1.5 text-xs"></i> Lunch
+                </span>
+                <button onclick="let v = prompt('Override lunch for ${day}:', '${dayData.lunchOverride || ''}'); if(v !== null) updateMeal('${day}', 'lunchOverride', v);" class="text-[10px] text-slate-500 hover:text-emerald-400 underline">
+                  ${dayData.lunchOverride ? 'Clear / Edit' : 'Override'}
+                </button>
+              </label>
+              <div class="bg-slate-950/70 border border-dashed border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+                ${lunchDisplay}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1 flex items-center">
+                <i class="fa-solid fa-utensils text-rose-400 mr-1.5 text-xs"></i> Dinner
+              </label>
+              <input type="text" value="${dayData.dinner || ''}" 
+                     placeholder="e.g. Pasta bolognese, baked salmon..."
+                     onchange="updateMeal('${day}', 'dinner', this.value)"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 placeholder:text-slate-600"/>
+            </div>
+
+            <div class="pt-1">
+              <div class="flex gap-1.5">
+                <input type="text" value="${dayData.ingredients || ''}" 
+                       placeholder="Dinner ingredients (e.g. garlic, pasta, cream)"
+                       onchange="updateMeal('${day}', 'ingredients', this.value)"
+                       class="flex-1 bg-slate-950 border border-slate-800/80 rounded-xl px-2.5 py-1 text-[11px] text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"/>
+                <button onclick="parseIngredientsToGrocery('${day}')" class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-[11px] font-medium transition flex items-center space-x-1" title="Send ingredients to Grocery List">
+                  <i class="fa-solid fa-cart-plus text-[10px]"></i>
+                  <span>Cart</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        daysContainer.appendChild(card);
+      });
+
+      // 2. Render Groceries
+      const depts = document.getElementById('grocery-departments');
+      depts.innerHTML = '';
+      const totalItems = state.groceries.length;
+      const checkedItems = state.groceries.filter(g => g.checked).length;
+      document.getElementById('grocery-count').innerText = `${checkedItems}/${totalItems} completed`;
+
+      const badge = document.getElementById('grocery-badge');
+      const uncompleted = totalItems - checkedItems;
+      if (uncompleted > 0) {
+        badge.innerText = uncompleted;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      if (totalItems === 0) {
+        depts.innerHTML = `<div class="text-center py-10 text-slate-500 text-xs">Your grocery list is empty.</div>`;
+      } else {
+        state.groceries.forEach(item => {
+          const row = document.createElement('div');
+          row.className = `flex items-center justify-between p-3 rounded-xl border transition ${item.checked ? 'bg-slate-950/40 border-slate-900 opacity-50' : 'bg-slate-900 border-slate-800'}`;
+          row.innerHTML = `
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="toggleGrocery('${item.id}')">
+              <div class="w-5 h-5 rounded-lg border flex items-center justify-center ${item.checked ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-slate-700 bg-slate-950'}">
+                ${item.checked ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+              </div>
+              <div>
+                <p class="text-xs font-medium ${item.checked ? 'line-through text-slate-500' : 'text-slate-200'}">${item.name}</p>
+                ${item.source ? `<span class="text-[10px] text-slate-500">${item.source}</span>` : ''}
+              </div>
+            </div>
+            <button onclick="deleteGrocery('${item.id}')" class="text-slate-600 hover:text-rose-400 p-1 text-xs">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          `;
+          depts.appendChild(row);
+        });
+      }
+
+      // 3. Render Events
+      const evList = document.getElementById('events-list');
+      evList.innerHTML = '';
+      if (state.events.length === 0) {
+        evList.innerHTML = `<div class="text-center py-10 text-slate-500 text-xs">No events added this week.</div>`;
+      } else {
+        state.events.forEach(ev => {
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800";
+          row.innerHTML = `
+            <div>
+              <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">${ev.day}</span>
+              <p class="text-xs text-slate-200 mt-0.5">${ev.title}</p>
+              <span class="text-[9px] text-slate-500">by ${ev.author || 'User'}</span>
+            </div>
+            <button onclick="deleteEvent('${ev.id}')" class="text-slate-600 hover:text-rose-400 p-1 text-xs">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          `;
+          evList.appendChild(row);
+        });
+      }
+    }
+
+    render();
+    initSupabaseSync();
+  </script>
+</body>
+</html>
