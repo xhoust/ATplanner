@@ -22,9 +22,6 @@
       background-color: #faf6f0;
       color: #262422;
     }
-    .handwriting {
-      font-family: 'Caveat', cursive;
-    }
     .cat-paw-bg {
       background-image: radial-gradient(#e4dacf 1.2px, transparent 1.2px), radial-gradient(#e4dacf 1.2px, #faf6f0 1.2px);
       background-size: 40px 40px;
@@ -76,7 +73,7 @@
   <!-- Main Container -->
   <main class="max-w-md mx-auto px-4 pt-4 relative z-10">
 
-    <!-- View 1: Meals Calendar -->
+    <!-- View 1: Meals Calendar + Month View -->
     <section id="view-planner" class="space-y-4">
       <div class="flex items-center justify-between px-1">
         <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-500">Weekly Meal Board</h2>
@@ -87,6 +84,35 @@
 
       <div id="days-container" class="space-y-4">
         <!-- Rendered via JS -->
+      </div>
+
+      <!-- Month Calendar at the Bottom of Main Tab -->
+      <div class="bg-white border border-amber-200/80 rounded-3xl p-5 shadow-sm mt-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-extrabold text-neutral-900 flex items-center gap-2">
+            <span>📅</span> <span id="cal-month-title">Month</span>
+          </h3>
+          <div class="flex items-center space-x-1">
+            <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button onclick="changeMonth(1)" class="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center text-xs font-bold transition">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-neutral-400 mb-2">
+          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+          <!-- Calendar Days generated via JS -->
+        </div>
+
+        <div id="calendar-day-details" class="mt-4 pt-3 border-t border-neutral-100 text-xs hidden">
+          <p class="font-bold text-neutral-800 mb-1" id="cal-selected-date-label">Selected Date</p>
+          <div id="cal-selected-events" class="space-y-1"></div>
+        </div>
       </div>
     </section>
 
@@ -123,16 +149,21 @@
           <span>📌</span> Add an Event or Date
         </h2>
         <div class="space-y-3">
-          <select id="event-day-select" class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50">
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
-          </select>
-          <input id="event-title-input" type="text" placeholder="e.g. Dinner reservation at 7pm, gym..." 
+          <div class="grid grid-cols-2 gap-2">
+            <select id="event-day-select" class="bg-neutral-50 border border-neutral-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50">
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+            <input id="event-time-input" type="time" 
+                   class="bg-neutral-50 border border-neutral-200 rounded-2xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400/50"/>
+          </div>
+
+          <input id="event-title-input" type="text" placeholder="e.g. Dinner reservation, Gym session..." 
                  class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white" 
                  onkeydown="if(event.key === 'Enter') addEvent()"/>
           <button onclick="addEvent()" class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold py-3 rounded-2xl text-sm shadow-sm transition active:scale-98">
@@ -196,6 +227,7 @@
 
     let state = JSON.parse(localStorage.getItem('at_hub_state')) || DEFAULT_DATA;
     let currentUser = localStorage.getItem('at_hub_user') || 'Tibor';
+    let currentCalDate = new Date();
 
     document.getElementById('active-user-label').innerText = currentUser;
 
@@ -303,16 +335,19 @@
 
     function addEvent() {
       const day = document.getElementById('event-day-select').value;
+      const time = document.getElementById('event-time-input').value;
       const text = document.getElementById('event-title-input').value.trim();
       if (!text) return;
 
       state.events.push({
         id: Date.now().toString(),
         day: day,
+        time: time || '',
         title: text,
         author: currentUser
       });
       document.getElementById('event-title-input').value = '';
+      document.getElementById('event-time-input').value = '';
       pushState();
     }
 
@@ -331,8 +366,79 @@
       }
     }
 
+    function changeMonth(delta) {
+      currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('cal-month-title');
+      grid.innerHTML = '';
+
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      title.innerText = `${monthNames[month]} ${year}`;
+
+      const firstDayOfMonth = new Date(year, month, 1).getDay();
+      // Adjust Sunday (0) to European start on Monday (0-6)
+      const startCol = (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      // Blank filler days
+      for (let i = 0; i < startCol; i++) {
+        const blank = document.createElement('div');
+        blank.className = "py-2 text-neutral-200";
+        grid.appendChild(blank);
+      }
+
+      const today = new Date();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = new Date(year, month, day);
+        const dayOfWeekIndex = (cellDate.getDay() === 0 ? 6 : cellDate.getDay() - 1);
+        const dayName = DAYS[dayOfWeekIndex];
+        const dayEvents = state.events.filter(e => e.day === dayName);
+
+        const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+
+        const cell = document.createElement('button');
+        cell.className = `py-2 rounded-xl flex flex-col items-center justify-center transition active:scale-90 ${isToday ? 'bg-amber-800 text-white font-extrabold shadow-sm' : 'hover:bg-neutral-100 text-neutral-800'}`;
+        cell.innerHTML = `
+          <span>${day}</span>
+          ${dayEvents.length > 0 ? `<span class="w-1.5 h-1.5 rounded-full ${isToday ? 'bg-amber-200' : 'bg-amber-600'} mt-0.5"></span>` : '<span class="w-1.5 h-1.5 mt-0.5"></span>'}
+        `;
+
+        cell.onclick = () => {
+          const detail = document.getElementById('calendar-day-details');
+          const label = document.getElementById('cal-selected-date-label');
+          const evContainer = document.getElementById('cal-selected-events');
+          detail.classList.remove('hidden');
+          label.innerText = `${dayName}, ${monthNames[month]} ${day}`;
+          evContainer.innerHTML = '';
+
+          if (dayEvents.length === 0) {
+            evContainer.innerHTML = `<span class="text-neutral-400">No scheduled events.</span>`;
+          } else {
+            dayEvents.forEach(ev => {
+              const div = document.createElement('div');
+              div.className = "p-2 bg-neutral-50 rounded-xl border border-neutral-100 flex items-center justify-between";
+              div.innerHTML = `
+                <span class="font-bold text-neutral-800">${ev.time ? `🕒 ${ev.time} — ` : ''}${ev.title}</span>
+                <span class="text-[10px] text-neutral-400">${ev.author}</span>
+              `;
+              evContainer.appendChild(div);
+            });
+          }
+        };
+
+        grid.appendChild(cell);
+      }
+    }
+
     function render() {
-      // 1. Render Days
+      // 1. Render Meal Days
       const daysContainer = document.getElementById('days-container');
       daysContainer.innerHTML = '';
 
@@ -346,16 +452,36 @@
 
         const card = document.createElement('div');
         card.className = "bg-white border border-amber-200/70 rounded-3xl p-5 shadow-xs transition hover:shadow-sm";
+        
+        let eventsHtml = '';
+        if (dayEvents.length > 0) {
+          eventsHtml = `
+            <div class="mb-3 space-y-1">
+              ${dayEvents.map(ev => `
+                <div class="flex items-center justify-between bg-sky-50 text-sky-900 border border-sky-100 px-3 py-1.5 rounded-xl text-xs font-bold">
+                  <span class="flex items-center gap-1.5">
+                    <span>${ev.time ? `🕒 ${ev.time}` : '📌'}</span>
+                    <span>${ev.title}</span>
+                  </span>
+                  <span class="text-[10px] text-sky-600 font-semibold">${ev.author}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
         card.innerHTML = `
-          <div class="flex items-center justify-between mb-4 pb-2.5 border-b border-neutral-100">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-neutral-100">
             <span class="font-extrabold text-base text-neutral-900 tracking-tight flex items-center gap-1.5">
               <span>🗓️</span> ${day}
             </span>
             ${dayEvents.length > 0 ? `
-              <span class="text-xs bg-sky-100 text-sky-800 font-bold px-2.5 py-0.5 rounded-full">
-                ${dayEvents.length} event${dayEvents.length > 1 ? 's' : ''}
+              <span class="text-xs bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full">
+                ${dayEvents.length}
               </span>` : ''}
           </div>
+
+          ${eventsHtml}
 
           <div class="space-y-3.5">
             <div>
@@ -443,7 +569,7 @@
         });
       }
 
-      // 3. Render Events
+      // 3. Render Events List
       const evList = document.getElementById('events-list');
       evList.innerHTML = '';
       if (state.events.length === 0) {
@@ -460,7 +586,10 @@
           row.className = "flex items-center justify-between p-4 rounded-2xl bg-white border border-amber-200/70 shadow-xs";
           row.innerHTML = `
             <div>
-              <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider bg-amber-100/70 px-2 py-0.5 rounded-lg">${ev.day}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-amber-800 uppercase tracking-wider bg-amber-100/70 px-2 py-0.5 rounded-lg">${ev.day}</span>
+                ${ev.time ? `<span class="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-lg">🕒 ${ev.time}</span>` : ''}
+              </div>
               <p class="text-sm font-bold text-neutral-800 mt-1.5">${ev.title}</p>
               <span class="text-[10px] font-semibold text-neutral-400">added by ${ev.author || 'Someone'}</span>
             </div>
@@ -471,6 +600,8 @@
           evList.appendChild(row);
         });
       }
+
+      renderCalendar();
     }
 
     render();
