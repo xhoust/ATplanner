@@ -99,7 +99,7 @@
           </span>
         </div>
         <div class="flex gap-2">
-          <input id="new-item-input" type="text" placeholder="Add milk, sourdough, apples..." 
+          <input id="new-item-input" type="text" placeholder="Add an item..." 
                  class="flex-1 bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white transition" 
                  onkeydown="if(event.key === 'Enter') addCustomGroceryItem()"/>
           <button onclick="addCustomGroceryItem()" class="bg-amber-800 hover:bg-amber-900 text-white font-bold px-5 py-3 rounded-2xl text-sm shadow-sm transition active:scale-95">
@@ -164,7 +164,7 @@
             </div>
           </div>
 
-          <input id="event-title-input" type="text" placeholder="e.g. Slovak PRO Reception, Gym, Dinner..." 
+          <input id="event-title-input" type="text" placeholder="Add title or note..." 
                  class="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white" 
                  onkeydown="if(event.key === 'Enter') addEvent()"/>
           <button onclick="addEvent()" class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold py-3 rounded-2xl text-sm shadow-sm transition active:scale-98">
@@ -234,7 +234,6 @@
     let currentUser = localStorage.getItem('at_hub_user') || 'Tibor';
     let currentCalDate = new Date();
 
-    // Default the date input to today
     const formatYMD = (d) => {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -289,7 +288,6 @@
 
         if (data && data.data) {
           state = data.data;
-          // Ensure events array exists
           if (!state.events) state.events = [];
           localStorage.setItem('at_hub_state', JSON.stringify(state));
           render();
@@ -377,7 +375,6 @@
       pushState();
     }
 
-    // Weekly reset ONLY resets meals & lunch overrides. Events stay untouched!
     function confirmResetWeek() {
       if (confirm("Reset this week's meals and lunch overrides? (Your calendar events will NOT be touched).")) {
         DAYS.forEach(d => {
@@ -387,7 +384,6 @@
       }
     }
 
-    // Helper: compute current week dates (Monday to Sunday)
     function getCurrentWeekDates() {
       const now = new Date();
       const currentDay = now.getDay();
@@ -476,7 +472,7 @@
     function render() {
       const currentWeek = getCurrentWeekDates();
 
-      // 1. Render Meal Days & match this week's events
+      // 1. Render Meal Days
       const daysContainer = document.getElementById('days-container');
       daysContainer.innerHTML = '';
 
@@ -486,7 +482,6 @@
         const prevDayDinner = (state.days[prevDay] && state.days[prevDay].dinner) ? state.days[prevDay].dinner : '';
         const lunchDisplay = dayData.lunchOverride || (prevDayDinner ? `Leftovers: ${prevDayDinner}` : 'No leftovers planned');
 
-        // Check if there are events for this day in the current week
         const dayDateString = currentWeek[day];
         const thisDayEvents = (state.events || []).filter(e => e.date === dayDateString);
 
@@ -529,7 +524,7 @@
                 <span>🍳</span> Breakfast
               </label>
               <input type="text" value="${dayData.breakfast || ''}" 
-                     placeholder="e.g. Scrambled eggs, coffee..."
+                     placeholder="Breakfast..."
                      onchange="updateMeal('${day}', 'breakfast', this.value)"
                      class="w-full bg-[#fbf9f5] border border-neutral-200/90 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 placeholder:text-neutral-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white transition"/>
             </div>
@@ -554,7 +549,7 @@
                 <span>🍷</span> Dinner
               </label>
               <input type="text" value="${dayData.dinner || ''}" 
-                     placeholder="e.g. Risotto, pasta ragu, salmon..."
+                     placeholder="Dinner..."
                      onchange="updateMeal('${day}', 'dinner', this.value)"
                      class="w-full bg-[#fbf9f5] border border-neutral-200/90 rounded-2xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 placeholder:text-neutral-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white transition"/>
             </div>
@@ -609,7 +604,7 @@
         });
       }
 
-      // 3. Render Events List (Sorted by date)
+      // 3. Render Events List
       const evList = document.getElementById('events-list');
       evList.innerHTML = '';
       const sortedEvents = [...(state.events || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
